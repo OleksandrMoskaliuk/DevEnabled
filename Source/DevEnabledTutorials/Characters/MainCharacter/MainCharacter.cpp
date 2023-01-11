@@ -5,11 +5,11 @@
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-// Controls
-#include "../../Inputs/GameplayTagsSingleton/MyInputConfigData.h"
+// Inputs
+#include <GameFramework/PawnMovementComponent.h>
+
 #include "EnhancedInput/Public/EnhancedInputComponent.h"
 #include "EnhancedInput/Public/EnhancedInputSubsystems.h"
-#include "EnhancedInput/Public/InputMappingContext.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter() {
@@ -69,23 +69,45 @@ void AMainCharacter::Move(const FInputActionValue& Value) {
 void AMainCharacter::Look(const FInputActionValue& Value) {
   if (Controller != nullptr) {
     FVector2D LookValue = Value.Get<FVector2D>();
-    GEngine->AddOnScreenDebugMessage(
+    /*GEngine->AddOnScreenDebugMessage(
         345, 1, FColor::Green, "Y = " + FString::SanitizeFloat(LookValue.Y));
     GEngine->AddOnScreenDebugMessage(
-        479, 1, FColor::Green, "X = " + FString::SanitizeFloat(LookValue.X));
+        479, 1, FColor::Green, "X = " + FString::SanitizeFloat(LookValue.X));*/
 
-    APlayerController* const PC = CastChecked<APlayerController>(Controller);
-    PC->IsLookInputIgnored();
+    /*APlayerController* const PC = CastChecked<APlayerController>(Controller);
     GEngine->AddOnScreenDebugMessage(
         179, 1, FColor::Green,
         "PC->IsLookInputIgnored() = " +
-            FString(PC->IsLookInputIgnored() ? "true" : "false"));
+            FString(PC->IsLookInputIgnored() ? "true" : "false"));*/
 
     AddControllerYawInput(LookValue.X * BaseTurnRate *
                           GetWorld()->GetDeltaSeconds() * (-1.f));
 
     AddControllerPitchInput(LookValue.Y * BaseLookUpAtRate *
                             GetWorld()->GetDeltaSeconds());
+  }
+}
+
+void AMainCharacter::Jump(const FInputActionValue& Value) {
+  Super::Jump();
+  if (Controller != nullptr && !GetMovementComponent()->IsFalling()) {
+    ACharacter::Jump();
+  }
+}
+
+void AMainCharacter::ChangeCameraDistance(const FInputActionValue& Value) {
+  if (Controller != nullptr) {
+    float DistanceValue = Value.Get<float>();
+    // Clamp distance
+    float MaxClampDistance = 200.f;
+    float MinClampDistance = 1200.f;
+    if (DistanceValue < 0 &&
+        SpringArmComponent->TargetArmLength <= MinClampDistance)
+      return;
+    if (DistanceValue > 0 &&
+        SpringArmComponent->TargetArmLength >= MaxClampDistance)
+      return;
+    SpringArmComponent->TargetArmLength += DistanceValue * 25;
   }
 }
 
@@ -99,25 +121,48 @@ void AMainCharacter::SetupPlayerInputComponent(
 
   // Get the player controller
   APlayerController* PC = Cast<APlayerController>(GetController());
-
   // Get the local player subsystem
   UEnhancedInputLocalPlayerSubsystem* Subsystem =
       ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(
           PC->GetLocalPlayer());
   // Clear out existing mapping, and add our mapping
   Subsystem->ClearAllMappings();
-  if (InputMapping) {
-    Subsystem->AddMappingContext(InputMapping, 0);
+
+  if (InputMappingContext) {
+    Subsystem->AddMappingContext(InputMappingContext, 0);
   }
 
   // Get the EnhancedInputComponent
-  UEnhancedInputComponent* PEI =
+  UEnhancedInputComponent* EnhancedInputComponent =
       Cast<UEnhancedInputComponent>(PlayerInputComponent);
   // Bind the actions
-  if (InputActions) {
-    PEI->BindAction(InputActions->InputMove, ETriggerEvent::Triggered, this,
-                    &AMainCharacter::Move);
-    PEI->BindAction(InputActions->InputLook, ETriggerEvent::Triggered, this,
-                    &AMainCharacter::Look);
+
+  UInputAction* CurrentInputAction = nullptr;
+  CurrentInputAction = *InputActionsMap.Find("IA_Move");
+  if (CurrentInputAction) {
+    EnhancedInputComponent->BindAction(CurrentInputAction,
+                                       ETriggerEvent::Triggered, this,
+                                       &AMainCharacter::Move);
+  }
+
+  CurrentInputAction = *InputActionsMap.Find("IA_Look");
+  if (CurrentInputAction) {
+    EnhancedInputComponent->BindAction(CurrentInputAction,
+                                       ETriggerEvent::Triggered, this,
+                                       &AMainCharacter::Look);
+  }
+
+  CurrentInputAction = *InputActionsMap.Find("IA_Jump");
+  if (CurrentInputAction) {
+    EnhancedInputComponent->BindAction(CurrentInputAction,
+                                       ETriggerEvent::Triggered, this,
+                                       &AMainCharacter::Jump);
+  }
+
+  CurrentInputAction = *InputActionsMap.Find("IA_ChangeCameraDistance");
+  if (CurrentInputAction) {
+    EnhancedInputComponent->BindAction(CurrentInputAction,
+                                       ETriggerEvent::Triggered, this,
+                                       &AMainCharacter::ChangeCameraDistance);
   }
 }

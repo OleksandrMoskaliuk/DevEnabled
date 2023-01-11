@@ -7,6 +7,7 @@
 #include "EnhancedInput/Public/InputActionValue.h"
 #include "MainCharacter.generated.h"
 
+class UInputAction;
 
 UCLASS()
 class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
@@ -29,10 +30,10 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
   float BaseLookUpAtRate;
 
    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
-  class UInputMappingContext* InputMapping;
+  class UInputMappingContext* InputMappingContext;
 
-   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
-  class UMyInputConfigData* InputActions;
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
+  TMap<FString, UInputAction*> InputActionsMap;
 
   // Sets default values for this character's properties
   AMainCharacter();
@@ -52,6 +53,11 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
   // Handle look input
   void Look(const FInputActionValue& Value);
 
+   // Handle jump input
+  void Jump(const FInputActionValue& Value);
+
+   // Handle camera distance input
+  void ChangeCameraDistance(const FInputActionValue& Value);
   
 
  public:
