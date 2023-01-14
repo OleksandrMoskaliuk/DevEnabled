@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "EnhancedInput/Public/InputActionValue.h"
+#include "Components/TimelineComponent.h"
+
 #include "MainCharacter.generated.h"
 
 class UInputAction;
@@ -29,7 +31,10 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
   float BaseLookUpAtRate;
 
-   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Smooth Camera Movement")
+  class UCurveFloat* MoveCurve;
+
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
   class UInputMappingContext* InputMappingContext;
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
@@ -57,6 +62,7 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
   void Jump(const FInputActionValue& Value);
 
    // Handle camera distance input
+  UFUNCTION()
   void ChangeCameraDistance(const FInputActionValue& Value);
   
 
@@ -68,4 +74,18 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
   virtual void SetupPlayerInputComponent(
       class UInputComponent* PlayerInputComponent) override;
 
+ UFUNCTION()
+  void ChangeCameraDistanceSmoothly();
+
+ UFUNCTION()
+  void ChangeCameraDistanceSmoothlyEnd();
+
+ 
+private:
+  /* For change camera distance smoothly */
+  FTimeline SmoothCameraMoveTimeline;
+  bool bIsSmoothCameraTrigger;
+  bool bIsSmoothCameraReversed;
+  float SmoothCameraPreviousTimelineValue = 0.f;
+ 
 };

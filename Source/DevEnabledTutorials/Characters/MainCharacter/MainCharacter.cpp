@@ -11,7 +11,6 @@
 #include "EnhancedInput/Public/EnhancedInputComponent.h"
 #include "EnhancedInput/Public/EnhancedInputSubsystems.h"
 
-// Sets default values
 AMainCharacter::AMainCharacter() {
   // Set this character to call Tick() every frame.  You can turn this off to
   // improve performance if you don't need it.
@@ -30,12 +29,31 @@ AMainCharacter::AMainCharacter() {
       CreateDefaultSubobject<UCameraComponent>("Camera componnet");
   CameraComponent->SetupAttachment(SpringArmComponent);
 
+ 
   BaseTurnRate = 45.f;
   BaseLookUpAtRate = 45.f;
 }
 
+
+
 // Called when the game starts or when spawned
-void AMainCharacter::BeginPlay() { Super::BeginPlay(); }
+void AMainCharacter::BeginPlay() {
+  Super::BeginPlay();
+  if (MoveCurve) {
+    GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, "BeginPlay!!!!!!!!!!!!!!!!!!!!!!!!!");
+
+    FOnTimelineFloat TimelineCallback;
+    FOnTimelineEventStatic TimelineFinishCallback;
+
+    TimelineCallback.BindUFunction(this,TEXT("ChangeCameraDistanceSmoothly"));
+
+    TimelineFinishCallback.BindUFunction(this, TEXT("ChangeCameraDistanceSmoothlyEnd"));
+
+    SmoothCameraMoveTimeline.AddInterpFloat(MoveCurve, TimelineCallback);
+    SmoothCameraMoveTimeline.SetTimelineFinishedFunc(TimelineFinishCallback);
+
+  }
+}
 
 void AMainCharacter::MoveForward() {
   GEngine->AddOnScreenDebugMessage(123, 2, FColor::Red, "Move is here");
@@ -89,7 +107,6 @@ void AMainCharacter::Look(const FInputActionValue& Value) {
 }
 
 void AMainCharacter::Jump(const FInputActionValue& Value) {
-  Super::Jump();
   if (Controller != nullptr && !GetMovementComponent()->IsFalling()) {
     ACharacter::Jump();
   }
@@ -98,21 +115,41 @@ void AMainCharacter::Jump(const FInputActionValue& Value) {
 void AMainCharacter::ChangeCameraDistance(const FInputActionValue& Value) {
   if (Controller != nullptr) {
     float DistanceValue = Value.Get<float>();
-    // Clamp distance
-    float MaxClampDistance = 200.f;
-    float MinClampDistance = 1200.f;
-    if (DistanceValue < 0 &&
-        SpringArmComponent->TargetArmLength <= MinClampDistance)
-      return;
-    if (DistanceValue > 0 &&
-        SpringArmComponent->TargetArmLength >= MaxClampDistance)
-      return;
-    SpringArmComponent->TargetArmLength += DistanceValue * 25;
+    if (MoveCurve) {
+      DistanceValue > 0 ? bIsSmoothCameraReversed = true
+                        : bIsSmoothCameraReversed = false; 
+
+      SmoothCameraMoveTimeline.SetPlaybackPosition(0,true);
+      SmoothCameraMoveTimeline.Play();
+      bIsSmoothCameraTrigger = true;
+
+    } else {
+      // Clamp distance
+      float MaxClampDistance = 1200.f;
+      float MinClampDistance = 200.f;
+      GEngine->AddOnScreenDebugMessage(
+          -1, 2.f, FColor::Orange,
+          FString::SanitizeFloat(SpringArmComponent->TargetArmLength));
+      if (DistanceValue < 0 &&
+          SpringArmComponent->TargetArmLength < MinClampDistance) {
+        return;
+      }
+      if (DistanceValue > 0 &&
+          SpringArmComponent->TargetArmLength > MaxClampDistance) {
+        return;
+      }
+      SpringArmComponent->TargetArmLength += DistanceValue * 25;
+    }
   }
 }
 
 // Called every frame
-void AMainCharacter::Tick(float DeltaTime) { Super::Tick(DeltaTime); }
+void AMainCharacter::Tick(float DeltaTime) { 
+  Super::Tick(DeltaTime);
+  if (bIsSmoothCameraTrigger) {
+    SmoothCameraMoveTimeline.TickTimeline(DeltaTime);
+  }
+}
 
 // Called to bind functionality to input
 void AMainCharacter::SetupPlayerInputComponent(
@@ -161,8 +198,33 @@ void AMainCharacter::SetupPlayerInputComponent(
 
   CurrentInputAction = *InputActionsMap.Find("IA_ChangeCameraDistance");
   if (CurrentInputAction) {
+    GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan,
+                                     "IA_ChangeCameraDistance");
     EnhancedInputComponent->BindAction(CurrentInputAction,
                                        ETriggerEvent::Triggered, this,
                                        &AMainCharacter::ChangeCameraDistance);
   }
 }
+
+void AMainCharacter::ChangeCameraDistanceSmoothly() {
+
+  float PlaybackPosition = SmoothCameraMoveTimeline.GetPlaybackPosition();
+  float CurveValue = MoveCurve->GetFloatValue(PlaybackPosition);
+
+  if (bIsSmoothCameraReversed) {
+    CurveValue = -CurveValue;
+  }
+
+  const float AdjustedValue = CurveValue - SmoothCameraPreviousTimelineValue;
+  GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan,
+                                   FString::SanitizeFloat(AdjustedValue));
+
+ SpringArmComponent->TargetArmLength += CurveValue;
+
+  SmoothCameraPreviousTimelineValue = CurveValue;
+}
+
+void AMainCharacter::ChangeCameraDistanceSmoothlyEnd() {
+  bIsSmoothCameraTrigger = false;
+}
+
