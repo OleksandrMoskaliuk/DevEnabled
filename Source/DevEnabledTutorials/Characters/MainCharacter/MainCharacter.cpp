@@ -7,9 +7,9 @@
 #include "GameFramework/SpringArmComponent.h"
 // Inputs
 #include <GameFramework/PawnMovementComponent.h>
-
 #include "EnhancedInput/Public/EnhancedInputComponent.h"
 #include "EnhancedInput/Public/EnhancedInputSubsystems.h"
+#include "../../Components/SmothCameraActorComponent/SmoothCameraActorComponent.h"
 
 AMainCharacter::AMainCharacter() {
   // Set this character to call Tick() every frame.  You can turn this off to
@@ -26,9 +26,14 @@ AMainCharacter::AMainCharacter() {
   // SpringArmComponent->TargetArmLength = 400.f;
 
   CameraComponent =
-      CreateDefaultSubobject<UCameraComponent>("Camera componnet");
+      CreateDefaultSubobject<UCameraComponent>("Camera Component");
   CameraComponent->SetupAttachment(SpringArmComponent);
 
+  SmoothCameraComponent = CreateDefaultSubobject<USmoothCameraActorComponent>(
+      "Smooth Camera Component");
+  if (SmoothCameraComponent) {
+    SmoothCameraComponent->Initialize(this->SpringArmComponent);
+  }
  
   BaseTurnRate = 45.f;
   BaseLookUpAtRate = 45.f;
@@ -39,20 +44,7 @@ AMainCharacter::AMainCharacter() {
 // Called when the game starts or when spawned
 void AMainCharacter::BeginPlay() {
   Super::BeginPlay();
-  if (MoveCurve) {
-    GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan, "BeginPlay!!!!!!!!!!!!!!!!!!!!!!!!!");
-
-    FOnTimelineFloat TimelineCallback;
-    FOnTimelineEventStatic TimelineFinishCallback;
-
-    TimelineCallback.BindUFunction(this,TEXT("ChangeCameraDistanceSmoothly"));
-
-    TimelineFinishCallback.BindUFunction(this, TEXT("ChangeCameraDistanceSmoothlyEnd"));
-
-    SmoothCameraMoveTimeline.AddInterpFloat(MoveCurve, TimelineCallback);
-    SmoothCameraMoveTimeline.SetTimelineFinishedFunc(TimelineFinishCallback);
-
-  }
+ 
 }
 
 void AMainCharacter::MoveForward() {
@@ -115,30 +107,8 @@ void AMainCharacter::Jump(const FInputActionValue& Value) {
 void AMainCharacter::ChangeCameraDistance(const FInputActionValue& Value) {
   if (Controller != nullptr) {
     float DistanceValue = Value.Get<float>();
-    if (MoveCurve) {
-      DistanceValue > 0 ? bIsSmoothCameraReversed = true
-                        : bIsSmoothCameraReversed = false; 
-
-      SmoothCameraMoveTimeline.SetPlaybackPosition(0,true);
-      SmoothCameraMoveTimeline.Play();
-      bIsSmoothCameraTrigger = true;
-
-    } else {
-      // Clamp distance
-      float MaxClampDistance = 1200.f;
-      float MinClampDistance = 200.f;
-      GEngine->AddOnScreenDebugMessage(
-          -1, 2.f, FColor::Orange,
-          FString::SanitizeFloat(SpringArmComponent->TargetArmLength));
-      if (DistanceValue < 0 &&
-          SpringArmComponent->TargetArmLength < MinClampDistance) {
-        return;
-      }
-      if (DistanceValue > 0 &&
-          SpringArmComponent->TargetArmLength > MaxClampDistance) {
-        return;
-      }
-      SpringArmComponent->TargetArmLength += DistanceValue * 25;
+    if (SmoothCameraComponent) {
+      SmoothCameraComponent->Move(DistanceValue);
     }
   }
 }
@@ -146,9 +116,7 @@ void AMainCharacter::ChangeCameraDistance(const FInputActionValue& Value) {
 // Called every frame
 void AMainCharacter::Tick(float DeltaTime) { 
   Super::Tick(DeltaTime);
-  if (bIsSmoothCameraTrigger) {
-    SmoothCameraMoveTimeline.TickTimeline(DeltaTime);
-  }
+ 
 }
 
 // Called to bind functionality to input
@@ -204,27 +172,5 @@ void AMainCharacter::SetupPlayerInputComponent(
                                        ETriggerEvent::Triggered, this,
                                        &AMainCharacter::ChangeCameraDistance);
   }
-}
-
-void AMainCharacter::ChangeCameraDistanceSmoothly() {
-
-  float PlaybackPosition = SmoothCameraMoveTimeline.GetPlaybackPosition();
-  float CurveValue = MoveCurve->GetFloatValue(PlaybackPosition);
-
-  if (bIsSmoothCameraReversed) {
-    CurveValue = -CurveValue;
-  }
-
-  const float AdjustedValue = CurveValue - SmoothCameraPreviousTimelineValue;
-  GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan,
-                                   FString::SanitizeFloat(AdjustedValue));
-
- SpringArmComponent->TargetArmLength += CurveValue;
-
-  SmoothCameraPreviousTimelineValue = CurveValue;
-}
-
-void AMainCharacter::ChangeCameraDistanceSmoothlyEnd() {
-  bIsSmoothCameraTrigger = false;
 }
 
