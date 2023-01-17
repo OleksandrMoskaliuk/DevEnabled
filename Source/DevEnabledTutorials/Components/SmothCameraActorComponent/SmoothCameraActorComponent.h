@@ -8,7 +8,7 @@
 
 
 class USpringArmComponent;
-
+/* This class will make posiible to change camera distance to player more smoother way through curve */
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class DEVENABLEDTUTORIALS_API USmoothCameraActorComponent
     : public UActorComponent {
@@ -41,7 +41,6 @@ UFUNCTION()
 
   void Move(float value);
 
-  void Initialize(USpringArmComponent* SpringArmComp);
  private:
   /* For change camera distance smoothly */
   struct FTimeline* SmoothCameraMoveTimeline;
@@ -49,7 +48,5 @@ UFUNCTION()
   bool bIsSmoothCameraReversed;
   float SmoothCameraPreviousTimelineValue = 0.f;
   USpringArmComponent* SpringArm;
-
-  
 
 };

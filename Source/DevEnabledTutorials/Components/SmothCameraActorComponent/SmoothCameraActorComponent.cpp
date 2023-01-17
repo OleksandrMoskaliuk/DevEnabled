@@ -1,9 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SmoothCameraActorComponent.h"
+
 #include "Components/TimelineComponent.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/SpringArmComponent.h"
 
 // Sets default values for this component's properties
 USmoothCameraActorComponent::USmoothCameraActorComponent() {
@@ -13,7 +14,6 @@ USmoothCameraActorComponent::USmoothCameraActorComponent() {
   PrimaryComponentTick.bCanEverTick = true;
   SmoothCameraMoveTimeline = new FTimeline();
 }
-
 
 USmoothCameraActorComponent::~USmoothCameraActorComponent() {
   if (SmoothCameraMoveTimeline) {
@@ -27,8 +27,19 @@ void USmoothCameraActorComponent::BeginPlay() {
   UActorComponent::BeginPlay();
 
   if (MoveCurve) {
-    GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan,
-                                     "BeginPlay!!!!!!!!!!!!!!!!!!!!!!!!!");
+    //Get pointer to SpringArmComponent 
+    AActor* Owner = GetOwner();
+    if (Owner) {
+      TArray<UActorComponent*> FoundComponennts =
+          Owner->GetComponentsByClass(USpringArmComponent::StaticClass());
+      for (UActorComponent* current_component : FoundComponennts) {
+        USpringArmComponent* finded_component =
+            Cast<USpringArmComponent>(current_component);
+        if (finded_component) {
+          SpringArm = finded_component;
+        }
+      }
+    }
 
     FOnTimelineFloat TimelineCallback;
     FOnTimelineEventStatic TimelineFinishCallback;
@@ -78,33 +89,24 @@ void USmoothCameraActorComponent::Move(float value) {
   }
 }
 
-void USmoothCameraActorComponent::Initialize(
-    USpringArmComponent* SpringArmComp) {
-
-
-
-  this->SpringArm = SpringArmComp;
-}
-
 void USmoothCameraActorComponent::ChangeCameraDistanceSmoothly() {
   ACharacter* Parent = Cast<ACharacter>(GetOwner());
-  
+
   if (SpringArm) {
-  
-  float PlaybackPosition = SmoothCameraMoveTimeline->GetPlaybackPosition();
-  float CurveValue = MoveCurve->GetFloatValue(PlaybackPosition);
+    float PlaybackPosition = SmoothCameraMoveTimeline->GetPlaybackPosition();
+    float CurveValue = MoveCurve->GetFloatValue(PlaybackPosition);
 
-  if (bIsSmoothCameraReversed) {
-    CurveValue = -CurveValue;
-  }
+    if (bIsSmoothCameraReversed) {
+      CurveValue = -CurveValue;
+    }
 
-  const float AdjustedValue = CurveValue - SmoothCameraPreviousTimelineValue;
-  GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan,
-                                   FString::SanitizeFloat(AdjustedValue));
+    const float AdjustedValue = CurveValue - SmoothCameraPreviousTimelineValue;
+    GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan,
+                                     FString::SanitizeFloat(AdjustedValue));
 
-  SpringArm->TargetArmLength += CurveValue;
+    SpringArm->TargetArmLength += CurveValue;
 
-  SmoothCameraPreviousTimelineValue = CurveValue;
+    SmoothCameraPreviousTimelineValue = CurveValue;
   }
 }
 

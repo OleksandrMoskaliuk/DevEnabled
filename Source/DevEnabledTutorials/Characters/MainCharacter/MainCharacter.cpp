@@ -31,9 +31,6 @@ AMainCharacter::AMainCharacter() {
 
   SmoothCameraComponent = CreateDefaultSubobject<USmoothCameraActorComponent>(
       "Smooth Camera Component");
-  if (SmoothCameraComponent) {
-    SmoothCameraComponent->Initialize(this->SpringArmComponent);
-  }
  
   BaseTurnRate = 45.f;
   BaseLookUpAtRate = 45.f;
