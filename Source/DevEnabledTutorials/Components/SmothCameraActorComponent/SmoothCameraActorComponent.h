@@ -6,9 +6,9 @@
 #include "CoreMinimal.h"
 #include "SmoothCameraActorComponent.generated.h"
 
-
 class USpringArmComponent;
-/* This class will make posiible to change camera distance to player more smoother way through curve */
+/* This class will make posiible to change camera distance to player more
+ * smoother way through curve */
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class DEVENABLEDTUTORIALS_API USmoothCameraActorComponent
     : public UActorComponent {
@@ -27,9 +27,11 @@ class DEVENABLEDTUTORIALS_API USmoothCameraActorComponent
   // Called when the game starts
   virtual void BeginPlay() override;
 
-UFUNCTION()
-  void ChangeCameraDistanceSmoothly();
+  // Timeline begin
+  UFUNCTION()
+  void ChangeCameraDistanceSmoothlyBegin();
 
+  // Timeline End
   UFUNCTION()
   void ChangeCameraDistanceSmoothlyEnd();
 
@@ -38,15 +40,16 @@ UFUNCTION()
   virtual void TickComponent(
       float DeltaTime, ELevelTick TickType,
       FActorComponentTickFunction* ThisTickFunction) override;
-
-  void Move(float value);
+  
+  // Main function to change camera distance to player 
+  void ChangeCameraDistance(float value);
 
  private:
   /* For change camera distance smoothly */
   struct FTimeline* SmoothCameraMoveTimeline;
-  bool bIsSmoothCameraTrigger;
+  /* Decide in what direction move camera */
   bool bIsSmoothCameraReversed;
-  float SmoothCameraPreviousTimelineValue = 0.f;
+  /* Pointer to handle ArmLength distance */
   USpringArmComponent* SpringArm;
 
 };

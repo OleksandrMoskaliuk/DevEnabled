@@ -105,7 +105,7 @@ void AMainCharacter::ChangeCameraDistance(const FInputActionValue& Value) {
   if (Controller != nullptr) {
     float DistanceValue = Value.Get<float>();
     if (SmoothCameraComponent) {
-      SmoothCameraComponent->Move(DistanceValue);
+      SmoothCameraComponent->ChangeCameraDistance(DistanceValue);
     }
   }
 }
