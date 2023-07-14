@@ -163,7 +163,7 @@ void AMainCharacter::SetupPlayerInputComponent(
 
   CurrentInputAction = *InputActionsMap.Find("IA_ChangeCameraDistance");
   if (CurrentInputAction) {
-    GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Cyan,
+    GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
                                      "IA_ChangeCameraDistance");
     EnhancedInputComponent->BindAction(CurrentInputAction,
                                        ETriggerEvent::Triggered, this,

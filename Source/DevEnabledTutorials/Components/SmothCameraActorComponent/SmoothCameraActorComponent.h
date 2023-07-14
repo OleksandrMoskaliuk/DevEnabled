@@ -51,5 +51,5 @@ class DEVENABLEDTUTORIALS_API USmoothCameraActorComponent
   bool bIsSmoothCameraReversed;
   /* Pointer to handle ArmLength distance */
   USpringArmComponent* SpringArm;
-
+  int play_counter;
 };

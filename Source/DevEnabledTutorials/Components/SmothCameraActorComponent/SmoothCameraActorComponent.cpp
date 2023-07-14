@@ -7,12 +7,13 @@
 #include "GameFramework/SpringArmComponent.h"
 
 // Sets default values for this component's properties
-USmoothCameraActorComponent::USmoothCameraActorComponent() {
+USmoothCameraActorComponent::USmoothCameraActorComponent() : play_counter(0) {
   // Set this component to be initialized when the game starts, and to be ticked
   // every frame.  You can turn these features off to improve performance if you
   // don't need them.
   PrimaryComponentTick.bCanEverTick = true;
   SmoothCameraMoveTimeline = new FTimeline();
+  
 }
 
 USmoothCameraActorComponent::~USmoothCameraActorComponent() {
@@ -66,8 +67,9 @@ void USmoothCameraActorComponent::TickComponent(
 
 void USmoothCameraActorComponent::ChangeCameraDistance(float value) {
   float DistanceValue = value;
-  
-  if (SmoothCameraMoveTimeline->IsPlaying()) return;
+ //GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
+ //                                  FString::SanitizeFloat(DistanceValue));
+  //if (SmoothCameraMoveTimeline->IsPlaying()) return;
   if (MoveCurve && SpringArm) {
     DistanceValue > 0 ? bIsSmoothCameraReversed = true
                       : bIsSmoothCameraReversed = false;
@@ -87,6 +89,11 @@ void USmoothCameraActorComponent::ChangeCameraDistance(float value) {
       return;
     }
 
+    if (SmoothCameraMoveTimeline->IsPlaying()) {
+      SmoothCameraMoveTimeline->PlayFromStart();
+      return;
+    }
+
     SmoothCameraMoveTimeline->SetPlaybackPosition(0, true);
     SmoothCameraMoveTimeline->Play();
   }
@@ -97,12 +104,12 @@ void USmoothCameraActorComponent::ChangeCameraDistanceSmoothlyBegin() {
   if (SpringArm) {
     float PlaybackPosition = SmoothCameraMoveTimeline->GetPlaybackPosition();
     float CurveValue = MoveCurve->GetFloatValue(PlaybackPosition);
-    //GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
-                                     //FString::SanitizeFloat(CurveValue));
+   
     if (bIsSmoothCameraReversed) {
       CurveValue = -CurveValue;
     }
     SpringArm->TargetArmLength += CurveValue;
+
   }
 }
 
