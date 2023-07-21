@@ -9,21 +9,48 @@
 
 UCLASS(ClassGroup = ("Character Components"),
        meta = (BlueprintSpawnableComponent))
-class DEVENABLEDTUTORIALS_API UCharacterAttributesComponent : public UActorComponent
-{
-	GENERATED_BODY()
+class DEVENABLEDTUTORIALS_API UCharacterAttributesComponent
+    : public UActorComponent {
+  GENERATED_BODY()
 
-public:	
-	// Sets default values for this component's properties
-	UCharacterAttributesComponent();
+ public:
+  // Sets default values for this component's properties
+  UCharacterAttributesComponent();
 
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
+  UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+  float DefaultMaxHealth;
 
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+  UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+  float CurrentHealth;
 
-		
+  UPROPERTY(EditAnywhere)
+  TSubclassOf<class UDEV_HealthBar> PlayerHealthBarHUDclass;
+
+  UPROPERTY()
+  class UDEV_HealthBar* PlayerHealthBarHUD;
+
+  
+
+
+ protected:
+  // Called when the game starts
+  virtual void BeginPlay() override;
+  virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+  UFUNCTION()
+  void TakeDamage(AActor* DamagedActor, float Damage,
+                  const class UDamageType* DamageType,
+                  class AController* InstigatedBy, AActor* DamageCauser);
+
+  UFUNCTION()
+  void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent,
+                    AActor* OtherActor, UPrimitiveComponent* OtherComp,
+                    int32 OtherBodyIndex, bool bFromSweep,
+                    const FHitResult& SweepResult);
+
+ public:
+  // Called every frame
+  virtual void TickComponent(
+      float DeltaTime, ELevelTick TickType,
+      FActorComponentTickFunction* ThisTickFunction) override;
 };

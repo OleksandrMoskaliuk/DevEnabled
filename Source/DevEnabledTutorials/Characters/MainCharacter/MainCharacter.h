@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "MainCharacter.generated.h"
 
+
 class UInputAction;
 
 UCLASS()
@@ -38,6 +39,9 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
   TMap<FString, UInputAction*> InputActionsMap;
 
+  UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Gameplay")
+  class USphereComponent* SphereOverlapComponent;
+
   // Sets default values for this character's properties
   AMainCharacter();
 
@@ -59,6 +63,12 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
   // Handle jump input
   void Jump(const FInputActionValue& Value);
 
+  // Fire line trace
+  void FireLineTrace(const FInputActionValue& Value);
+
+  // Default Player Interact
+  void PlayerInteract(const FInputActionValue& Value);
+
   // Handle camera distance input
   UFUNCTION()
   void ChangeCameraDistance(const FInputActionValue& Value);
@@ -71,4 +81,15 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
   virtual void SetupPlayerInputComponent(
       class UInputComponent* PlayerInputComponent) override;
 
+ private:
+  // Line trace helper function
+  AActor* FindAcotrByLineTrace(bool ShowLine = false);
+
+  AActor* FocusedActor;
+
+  UFUNCTION()
+  void OverlapBegin(UPrimitiveComponent* OverlappedComponent,
+                    AActor* OtherActor, UPrimitiveComponent* OtherComp,
+                    int32 OtherBodyIndex, bool bFromSweep,
+                    const FHitResult& SweepResult);
 };
