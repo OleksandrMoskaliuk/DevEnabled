@@ -47,6 +47,9 @@ void UCharacterAttributesComponent::OnOverlapBegin(
                                    "Begin overlap Dev attributes!");*/
   if (PlayerHealthBarHUD) {
     CurrentHealth += 10;
+    if (CurrentHealth > DefaultMaxHealth) {
+      CurrentHealth = DefaultMaxHealth;
+    }
     PlayerHealthBarHUD->SetHealth(CurrentHealth, DefaultMaxHealth);
 
     GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Yellow,

@@ -117,14 +117,6 @@ void AMainCharacter::FireLineTrace(const FInputActionValue& Value) {
   FindAcotrByLineTrace();
 }
 
-//void AMainCharacter::CameraDistanceIncrease() { ICD_Delegate.ExecuteIfBound(); }
-
-//void AMainCharacter::CameraDistanceDecrease() { DCD_Delegate.ExecuteIfBound(); }
-
-void AMainCharacter::ChangeCamera(float Value) {
-  CCD_Delegate.Broadcast(Value);
-}
-
 AActor* AMainCharacter::FindAcotrByLineTrace(bool ShowLine) {
   FVector Start;
   FVector End;
@@ -186,17 +178,7 @@ void AMainCharacter::PlayerInteract(const FInputActionValue& Value) {
 
 void AMainCharacter::ChangeCameraDistance(const FInputActionValue& Value) {  
  if (Controller != nullptr) {
-    float DistanceValue = Value.Get<float>();
-
-    ChangeCamera(DistanceValue);
-      //CCD_Delegate.Broadcast(DistanceValue);
-
-      /*if (DistanceValue > 0) {
-        CameraDistanceIncrease();
-      }
-      else {
-        CameraDistanceDecrease();
-      }*/
+      CCD_Delegate.Broadcast(Value.Get<float>());
   }
 }
 
