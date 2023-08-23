@@ -5,6 +5,7 @@
 #include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "../../Characters/MainCharacter/MainCharacter.h"
 
 // Sets default values for this component's properties
 USmoothCameraActorComponent::USmoothCameraActorComponent() : play_counter(0) {
@@ -13,7 +14,6 @@ USmoothCameraActorComponent::USmoothCameraActorComponent() : play_counter(0) {
   // don't need them.
   PrimaryComponentTick.bCanEverTick = true;
   SmoothCameraMoveTimeline = new FTimeline();
-  
 }
 
 USmoothCameraActorComponent::~USmoothCameraActorComponent() {
@@ -28,7 +28,7 @@ void USmoothCameraActorComponent::BeginPlay() {
   UActorComponent::BeginPlay();
 
   if (MoveCurve) {
-    //Get pointer to SpringArmComponent 
+    // Get pointer to SpringArmComponent
     AActor* Owner = GetOwner();
     if (Owner) {
       TArray<UActorComponent*> FoundComponennts =
@@ -45,13 +45,30 @@ void USmoothCameraActorComponent::BeginPlay() {
     FOnTimelineFloat TimelineCallback;
     FOnTimelineEventStatic TimelineFinishCallback;
 
-    TimelineCallback.BindUFunction(this, TEXT("ChangeCameraDistanceSmoothlyBegin"));
-
+    TimelineCallback.BindUFunction(this,
+                                   TEXT("ChangeCameraDistanceSmoothlyBegin"));
     TimelineFinishCallback.BindUFunction(
         this, TEXT("ChangeCameraDistanceSmoothlyEnd"));
 
     SmoothCameraMoveTimeline->AddInterpFloat(MoveCurve, TimelineCallback);
     SmoothCameraMoveTimeline->SetTimelineFinishedFunc(TimelineFinishCallback);
+  }
+
+  /* Binding delegates for controll camera distance */
+  AActor* Owner = GetOwner();
+  if (Owner) {
+    AMainCharacter* MainCharacter = Cast<AMainCharacter>(Owner);
+    if (MainCharacter) {
+      /*MainCharacter->ICD_Delegate.BindUObject(
+          this, &USmoothCameraActorComponent::IncreaseCameraDistance);
+
+      MainCharacter->DCD_Delegate.BindUObject(
+          this, &USmoothCameraActorComponent::DecreaseCameraDistance);*/
+     
+      MainCharacter->CCD_Delegate.AddUObject(
+          this, &USmoothCameraActorComponent::ChangeCameraDistance);
+       
+    }
   }
 }
 
@@ -61,15 +78,15 @@ void USmoothCameraActorComponent::TickComponent(
     FActorComponentTickFunction* ThisTickFunction) {
   UActorComponent::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
- SmoothCameraMoveTimeline->TickTimeline(DeltaTime);
-  
+  SmoothCameraMoveTimeline->TickTimeline(DeltaTime);
 }
 
-void USmoothCameraActorComponent::ChangeCameraDistance(float value) {
-  float DistanceValue = value;
- //GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
- //                                  FString::SanitizeFloat(DistanceValue));
-  //if (SmoothCameraMoveTimeline->IsPlaying()) return;
+void USmoothCameraActorComponent::ChangeCameraDistance(float DistanceValue) {
+
+ GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green,
+                                   "Dinamic binding works!!!!!!!");
+
+  // if (SmoothCameraMoveTimeline->IsPlaying()) return;
   if (MoveCurve && SpringArm) {
     DistanceValue > 0 ? bIsSmoothCameraReversed = true
                       : bIsSmoothCameraReversed = false;
@@ -104,15 +121,22 @@ void USmoothCameraActorComponent::ChangeCameraDistanceSmoothlyBegin() {
   if (SpringArm) {
     float PlaybackPosition = SmoothCameraMoveTimeline->GetPlaybackPosition();
     float CurveValue = MoveCurve->GetFloatValue(PlaybackPosition);
-   
+
     if (bIsSmoothCameraReversed) {
       CurveValue = -CurveValue;
     }
     SpringArm->TargetArmLength += CurveValue;
-
   }
 }
 
 void USmoothCameraActorComponent::ChangeCameraDistanceSmoothlyEnd() {
   SmoothCameraMoveTimeline->Stop();
+}
+
+void USmoothCameraActorComponent::IncreaseCameraDistance() {
+ ChangeCameraDistance(1);
+}
+
+void USmoothCameraActorComponent::DecreaseCameraDistance() {
+ ChangeCameraDistance(-1);
 }

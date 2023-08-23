@@ -6,6 +6,10 @@
 #include "EnhancedInput/Public/InputActionValue.h"
 #include "GameFramework/Character.h"
 #include "MainCharacter.generated.h"
+//DECLARE_DELEGATE(OnIncreaseCameraDistanceDelegate);
+//DECLARE_DELEGATE(OnDecreaseCameraDistanceDelegate);
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FControlCameraDistanceDelegate, float);
 
 
 class UInputAction;
@@ -30,8 +34,8 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
   float BaseLookUpAtRate;
 
-  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Smooth Camera Component")
-  class USmoothCameraActorComponent* SmoothCameraComponent;
+  //UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Smooth Camera Component")
+  //class USmoothCameraActorComponent* SmoothCameraComponent;
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
   class UInputMappingContext* InputMappingContext;
@@ -69,11 +73,12 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
   // Default Player Interact
   void PlayerInteract(const FInputActionValue& Value);
 
+ public:
+
   // Handle camera distance input
   UFUNCTION()
   void ChangeCameraDistance(const FInputActionValue& Value);
 
- public:
   // Called every frame
   virtual void Tick(float DeltaTime) override;
 
@@ -81,6 +86,16 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
   virtual void SetupPlayerInputComponent(
       class UInputComponent* PlayerInputComponent) override;
 
+  /* Change camera distance delegate for ChangeCameraDistance(const FInputActionValue& Value)
+  For maling MainCharacter class independent from SmoothCameraComponent creation, (now optional)
+  when you add component you have fonctionality 
+  no force creation any more!! */
+  //OnIncreaseCameraDistanceDelegate ICD_Delegate;
+  //OnDecreaseCameraDistanceDelegate DCD_Delegate;
+  FControlCameraDistanceDelegate CCD_Delegate;
+  void CameraDistanceIncrease();
+  void CameraDistanceDecrease();
+  void ChangeCamera(float Value);
  private:
   // Line trace helper function
   AActor* FindAcotrByLineTrace(bool ShowLine = false);

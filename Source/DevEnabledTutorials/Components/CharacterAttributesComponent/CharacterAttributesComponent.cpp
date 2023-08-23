@@ -31,7 +31,13 @@ void UCharacterAttributesComponent::TakeDamage(AActor* DamagedActor,
                                                float Damage,
                                                const UDamageType* DamageType,
                                                AController* InstigatedBy,
-                                               AActor* DamageCauser) {}
+                                               AActor* DamageCauser) 
+{
+  if (PlayerHealthBarHUD) {
+    CurrentHealth = -0.01;
+    PlayerHealthBarHUD->SetHealth(CurrentHealth, DefaultMaxHealth);
+  }
+}
 
 void UCharacterAttributesComponent::OnOverlapBegin(
     UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -40,7 +46,11 @@ void UCharacterAttributesComponent::OnOverlapBegin(
  /* GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Red,
                                    "Begin overlap Dev attributes!");*/
   if (PlayerHealthBarHUD) {
-    PlayerHealthBarHUD->SetHealth(CurrentHealth+=10, DefaultMaxHealth);
+    CurrentHealth += 10;
+    PlayerHealthBarHUD->SetHealth(CurrentHealth, DefaultMaxHealth);
+
+    GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Yellow,
+                                     FString::SanitizeFloat(CurrentHealth));
   }
 
 

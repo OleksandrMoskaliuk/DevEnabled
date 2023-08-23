@@ -7,6 +7,7 @@
 #include "SmoothCameraActorComponent.generated.h"
 
 class USpringArmComponent;
+
 /* This class will make posiible to change camera distance to player more
  * smoother way through curve */
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -34,6 +35,9 @@ class DEVENABLEDTUTORIALS_API USmoothCameraActorComponent
   // Timeline End
   UFUNCTION()
   void ChangeCameraDistanceSmoothlyEnd();
+
+  void IncreaseCameraDistance();
+  void DecreaseCameraDistance();
 
  public:
   // Called every frame
