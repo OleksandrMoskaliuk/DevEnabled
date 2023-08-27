@@ -51,7 +51,6 @@ void AMainCharacter::BeginPlay() { Super::BeginPlay();
   SphereOverlapComponent->OnComponentBeginOverlap.AddDynamic(
       this, &AMainCharacter::OverlapBegin);
 
-
 }
 
 
@@ -181,6 +180,8 @@ void AMainCharacter::ChangeCameraDistance(const FInputActionValue& Value) {
       CCD_Delegate.Broadcast(Value.Get<float>());
   }
 }
+
+
 
 // Called every frame
 void AMainCharacter::Tick(float DeltaTime) { 

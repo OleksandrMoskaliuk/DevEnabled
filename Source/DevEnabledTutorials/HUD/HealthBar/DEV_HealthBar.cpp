@@ -9,17 +9,11 @@ void UDEV_HealthBar::SetHealth(float CurrentHealth, float MaxHealth) {
   if (HealthBar) {
     HealthBarPercent = FMath::Clamp(CurrentHealth / MaxHealth, 0.f, 100.f);
   }
-
 }
 
 void UDEV_HealthBar::NativeTick(const FGeometry& MyGeometry, float DeltaTime) {
   Super::NativeTick(MyGeometry, DeltaTime);
-
- 
-
-
-  GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green,
-                                   FString::SanitizeFloat(HealtLerpAlpha));
+  SmoothHealthBarHandler(DeltaTime);
 }
 
 void UDEV_HealthBar::SmoothHealthBarHandler(float DeltaTime) {
