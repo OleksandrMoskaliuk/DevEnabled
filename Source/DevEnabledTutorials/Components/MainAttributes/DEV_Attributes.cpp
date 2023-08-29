@@ -2,9 +2,9 @@
 
 #include "DEV_Attributes.h"
 
-#include "Components\ProgressBar.h"
+#include "Components/ProgressBar.h"
 #include "Kismet/GameplayStatics.h"
-#include "GameFramework\HUD.h"
+#include "GameFramework/HUD.h"
 #include "../../HUD/HealthBar/DEV_HealthBar.h"
 #include "Blueprint/UserWidget.h"
 

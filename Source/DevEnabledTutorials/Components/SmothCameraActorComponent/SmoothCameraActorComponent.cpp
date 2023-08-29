@@ -31,8 +31,8 @@ void USmoothCameraActorComponent::BeginPlay() {
     // Get pointer to SpringArmComponent
     AActor* Owner = GetOwner();
     if (Owner) {
-      TArray<UActorComponent*> FoundComponennts =
-          Owner->GetComponentsByClass(USpringArmComponent::StaticClass());
+      TSet<UActorComponent*> FoundComponennts =
+          Owner->GetComponents();
       for (UActorComponent* current_component : FoundComponennts) {
         USpringArmComponent* finded_component =
             Cast<USpringArmComponent>(current_component);
@@ -65,7 +65,7 @@ void USmoothCameraActorComponent::BeginPlay() {
       MainCharacter->DCD_Delegate.BindUObject(
           this, &USmoothCameraActorComponent::DecreaseCameraDistance);*/
      
-      MainCharacter->CCD_Delegate.AddUObject(
+     MainCharacter->CCD_Delegate.AddUObject(
           this, &USmoothCameraActorComponent::ChangeCameraDistance);
        
     }

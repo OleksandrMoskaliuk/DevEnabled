@@ -10,7 +10,8 @@
 // Inputs
 #include <GameFramework/PawnMovementComponent.h>
 
-#include "../../Components/SmothCameraActorComponent/SmoothCameraActorComponent.h"
+#include "../../Components/DEV_CameraComponent/DEV_CameraComponent.h"
+#include "../../Components/DEV_SpringArmComponent/DEV_SpringArmComponent.h"
 #include "EnhancedInput/Public/EnhancedInputComponent.h"
 #include "EnhancedInput/Public/EnhancedInputSubsystems.h"
 // Other
@@ -25,35 +26,34 @@ AMainCharacter::AMainCharacter() : FocusedActor(nullptr) {
       CreateDefaultSubobject<UStaticMeshComponent>("Player mesh");
   StaticMeshComponent->SetupAttachment(GetRootComponent());
 
-  SpringArmComponent =
-      CreateDefaultSubobject<USpringArmComponent>("Spring Arm componnet");
-  SpringArmComponent->SetupAttachment(GetRootComponent());
+  DEV_SpringArmComponent =
+      CreateDefaultSubobject<UDEV_SpringArmComponent>("Spring Arm componnet");
+  DEV_SpringArmComponent->SetupAttachment(GetRootComponent());
   // SpringArmComponent->TargetArmLength = 400.f;
 
-  CameraComponent =
+  DEVCameraComponent =
       CreateDefaultSubobject<UCameraComponent>("Camera Component");
-  CameraComponent->SetupAttachment(SpringArmComponent);
+  DEVCameraComponent->SetupAttachment(DEV_SpringArmComponent);
 
-  //SmoothCameraComponent = CreateDefaultSubobject<USmoothCameraActorComponent>(
-  //    "Smooth Camera Component");
+  // SmoothCameraComponent =
+  // CreateDefaultSubobject<USmoothCameraActorComponent>(
+  //     "Smooth Camera Component");
 
-  SphereOverlapComponent = CreateDefaultSubobject<USphereComponent>(
-      "SphereOverlap");
+  SphereOverlapComponent =
+      CreateDefaultSubobject<USphereComponent>("SphereOverlap");
   SphereOverlapComponent->SetupAttachment(GetRootComponent());
-
+  InputMappingContext = nullptr;
   BaseTurnRate = 45.f;
   BaseLookUpAtRate = 45.f;
 }
 
 // Called when the game starts or when spawned
-void AMainCharacter::BeginPlay() { Super::BeginPlay();
+void AMainCharacter::BeginPlay() {
+  Super::BeginPlay();
 
   SphereOverlapComponent->OnComponentBeginOverlap.AddDynamic(
       this, &AMainCharacter::OverlapBegin);
-
 }
-
-
 
 void AMainCharacter::MoveForward() {
   GEngine->AddOnScreenDebugMessage(123, 2, FColor::Red, "Move is here");
@@ -87,10 +87,10 @@ void AMainCharacter::Move(const FInputActionValue& Value) {
 void AMainCharacter::Look(const FInputActionValue& Value) {
   if (Controller != nullptr) {
     FVector2D LookValue = Value.Get<FVector2D>();
-    /*GEngine->AddOnScreenDebugMessage(
+    GEngine->AddOnScreenDebugMessage(
         345, 1, FColor::Green, "Y = " + FString::SanitizeFloat(LookValue.Y));
     GEngine->AddOnScreenDebugMessage(
-        479, 1, FColor::Green, "X = " + FString::SanitizeFloat(LookValue.X));*/
+        479, 1, FColor::Green, "X = " + FString::SanitizeFloat(LookValue.X));
 
     /*APlayerController* const PC = CastChecked<APlayerController>(Controller);
     GEngine->AddOnScreenDebugMessage(
@@ -126,8 +126,8 @@ AActor* AMainCharacter::FindAcotrByLineTrace(bool ShowLine) {
   GetController()->GetPlayerViewPoint(Start, Rot);
   End = Start + (Rot.Vector() * 4000);
   if (ShowLine) {
-  DrawDebugLine(GetWorld(), Start + (Rot.Vector() * 500), End, FColor::Green,
-                false, 2.f);
+    DrawDebugLine(GetWorld(), Start + (Rot.Vector() * 500), End, FColor::Green,
+                  false, 2.f);
   }
   if (GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility,
                                            CollisionParams)) {
@@ -140,7 +140,7 @@ AActor* AMainCharacter::FindAcotrByLineTrace(bool ShowLine) {
       GEngine->AddOnScreenDebugMessage(
           18436, 1.f, FColor::Purple,
           FString::Printf(TEXT("Impact Point: %s"),
-                          *OutHit.ImpactPoint.ToString())); 
+                          *OutHit.ImpactPoint.ToString()));
       GEngine->AddOnScreenDebugMessage(
           19854, 1.f, FColor::Blue,
           FString::Printf(TEXT("Normal Point: %s"),
@@ -162,56 +162,62 @@ void AMainCharacter::OverlapBegin(UPrimitiveComponent* OverlappedComponent,
       AInterface->Execute_OnInteract(OtherActor);
     }
   }
-
 }
 
 void AMainCharacter::PlayerInteract(const FInputActionValue& Value) {
   AActor* IActor = FindAcotrByLineTrace();
-    if (IActor) {
-      IDEV_Interact* AInterface = Cast<IDEV_Interact>(IActor);
-      if (AInterface) {
-        AInterface->Execute_OnInteract(IActor);
-      }
+  if (IActor) {
+    IDEV_Interact* AInterface = Cast<IDEV_Interact>(IActor);
+    if (AInterface) {
+      AInterface->Execute_OnInteract(IActor);
     }
- }
-
-void AMainCharacter::ChangeCameraDistance(const FInputActionValue& Value) {  
- if (Controller != nullptr) {
-      CCD_Delegate.Broadcast(Value.Get<float>());
   }
 }
 
-
+void AMainCharacter::ChangeCameraDistance(const FInputActionValue& Value) {
+  float From = DEV_SpringArmComponent->TargetArmLength;
+  float To =
+      DEV_SpringArmComponent->TargetArmLength + (60 * Value.Get<float>());
+  float MaxCameraDistanceToCharacter = 1000; 
+  float MinCameraDistanceToCharacter = 100;
+  // Clamp distance to player
+  To >= MaxCameraDistanceToCharacter || To <= MinCameraDistanceToCharacter
+      ? false
+      : DEV_SpringArmComponent->InterpolateTargetArmLength(From, To);
+  // CameraComponent->ChangeCameraDistance(1);
+  /*if (Controller != nullptr) {
+       CCD_Delegate.Broadcast(Value.Get<float>());
+   }*/
+}
 
 // Called every frame
-void AMainCharacter::Tick(float DeltaTime) { 
- Super::Tick(DeltaTime);
+void AMainCharacter::Tick(float DeltaTime) {
+  Super::Tick(DeltaTime);
 
   auto focus = [](AActor* Actor, bool focus_or_unfocus) {
     if (Actor) {
-     IDEV_Interact *Interface = Cast<IDEV_Interact>(Actor);
+      IDEV_Interact* Interface = Cast<IDEV_Interact>(Actor);
       if (Interface) {
-       if (focus_or_unfocus) {
-       Interface->Execute_StartFocus(Actor);
-       } else {
-       Interface->Execute_EndFocus(Actor);
-       }
+        if (focus_or_unfocus) {
+          Interface->Execute_StartFocus(Actor);
+        } else {
+          Interface->Execute_EndFocus(Actor);
+        }
       }
     }
   };
 
- if (FocusedActor) {
+  if (FocusedActor) {
     AActor* CurrentActor = FindAcotrByLineTrace();
     if (FocusedActor != CurrentActor) {
       focus(FocusedActor, false);
     }
     FocusedActor = CurrentActor;
-    focus(FocusedActor, true);   
- } else {
+    focus(FocusedActor, true);
+  } else {
     FocusedActor = FindAcotrByLineTrace();
     focus(FocusedActor, true);
- }
- 
+  }
 }
 
 // Called to bind functionality to input
@@ -235,54 +241,42 @@ void AMainCharacter::SetupPlayerInputComponent(
   // Get the EnhancedInputComponent
   UEnhancedInputComponent* EnhancedInputComponent =
       Cast<UEnhancedInputComponent>(PlayerInputComponent);
+
   // Bind the actions
 
-  UInputAction* CurrentInputAction = nullptr;
-  CurrentInputAction = *InputActionsMap.Find("IA_Move");
-  if (CurrentInputAction) {
-    EnhancedInputComponent->BindAction(CurrentInputAction,
+  if (auto CurrentInputAction = InputActionsMap.Find("IA_Move")) {
+    EnhancedInputComponent->BindAction(*CurrentInputAction,
                                        ETriggerEvent::Triggered, this,
                                        &AMainCharacter::Move);
   }
 
-  CurrentInputAction = *InputActionsMap.Find("IA_Look");
-  if (CurrentInputAction) {
-    EnhancedInputComponent->BindAction(CurrentInputAction,
-                                       ETriggerEvent::Triggered, this,
-                                       &AMainCharacter::Look);
+  if (auto InputAction = InputActionsMap.Find("IA_Look")) {
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "ERROR 254");
+    EnhancedInputComponent->BindAction(*InputAction, ETriggerEvent::Triggered,
+                                       this, &AMainCharacter::Look);
   }
 
-  CurrentInputAction = *InputActionsMap.Find("IA_Jump");
-  if (CurrentInputAction) {
-    EnhancedInputComponent->BindAction(CurrentInputAction,
-                                       ETriggerEvent::Triggered, this,
-                                       &AMainCharacter::Jump);
+  if (auto InputAction = InputActionsMap.Find("IA_Jump")) {
+    EnhancedInputComponent->BindAction(*InputAction, ETriggerEvent::Triggered,
+                                       this, &AMainCharacter::Jump);
   }
 
-  CurrentInputAction = *InputActionsMap.Find("IA_ChangeCameraDistance");
-  if (CurrentInputAction) {
-    GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,
-                                     "IA_ChangeCameraDistance");
-    EnhancedInputComponent->BindAction(CurrentInputAction,
-                                       ETriggerEvent::Triggered, this,
+  if (auto InputAction = InputActionsMap.Find("IA_ChangeCameraDistance")) {
+    EnhancedInputComponent->BindAction(*InputAction, ETriggerEvent::Triggered,
+                                       this,
                                        &AMainCharacter::ChangeCameraDistance);
   }
 
-  CurrentInputAction = *InputActionsMap.Find("IA_FireLineTrace");
-  if (CurrentInputAction) {
+  if (auto InputAction = InputActionsMap.Find("IA_FireLineTrace")) {
     GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Cyan, "IA_FireLineTrace");
-    EnhancedInputComponent->BindAction(CurrentInputAction,
-                                       ETriggerEvent::Triggered, this,
-                                       &AMainCharacter::FireLineTrace);
+    EnhancedInputComponent->BindAction(*InputAction, ETriggerEvent::Triggered,
+                                       this, &AMainCharacter::FireLineTrace);
   }
 
-  CurrentInputAction = nullptr;
-  CurrentInputAction = *InputActionsMap.Find("IA_PlayerInteract");
-  if (CurrentInputAction) {
-    GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Cyan,
-                                     "IA_PlayerInteract");
-    EnhancedInputComponent->BindAction(CurrentInputAction,
-                                       ETriggerEvent::Triggered, this,
-                                       &AMainCharacter::PlayerInteract);
+  if (auto InputAction = InputActionsMap.Find("IA_PlayerInteract")) {
+    /* GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Cyan,
+                                      "IA_PlayerInteract");*/
+    EnhancedInputComponent->BindAction(*InputAction, ETriggerEvent::Triggered,
+                                       this, &AMainCharacter::PlayerInteract);
   }
 }
