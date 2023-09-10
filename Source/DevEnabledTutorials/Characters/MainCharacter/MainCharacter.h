@@ -20,7 +20,7 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
   class UDEV_SpringArmComponent* DEV_SpringArmComponent;
   
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
-  class UCameraComponent* DEVCameraComponent;
+  class UDEV_CameraComponent* DEV_CameraComponent;
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mesh")
   class UStaticMeshComponent* StaticMeshComponent;

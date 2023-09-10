@@ -14,14 +14,14 @@
 #include "../../Components/DEV_SpringArmComponent/DEV_SpringArmComponent.h"
 #include "EnhancedInput/Public/EnhancedInputComponent.h"
 #include "EnhancedInput/Public/EnhancedInputSubsystems.h"
+#include "DevEnabledTutorials\Components\DEV_CameraComponent\DEV_CameraComponent.h"
 // Other
 #include "../../Interfaces/DEV_Interact.cpp"
 
 AMainCharacter::AMainCharacter() : FocusedActor(nullptr) {
   // Set this character to call Tick() every frame.  You can turn this off to
   // improve performance if you don't need it.
-  PrimaryActorTick.bCanEverTick = true;
-
+  GetRootComponent()->SetComponentTickEnabled(false);
   StaticMeshComponent =
       CreateDefaultSubobject<UStaticMeshComponent>("Player mesh");
   StaticMeshComponent->SetupAttachment(GetRootComponent());
@@ -31,13 +31,9 @@ AMainCharacter::AMainCharacter() : FocusedActor(nullptr) {
   DEV_SpringArmComponent->SetupAttachment(GetRootComponent());
   // SpringArmComponent->TargetArmLength = 400.f;
 
-  DEVCameraComponent =
-      CreateDefaultSubobject<UCameraComponent>("Camera Component");
-  DEVCameraComponent->SetupAttachment(DEV_SpringArmComponent);
-
-  // SmoothCameraComponent =
-  // CreateDefaultSubobject<USmoothCameraActorComponent>(
-  //     "Smooth Camera Component");
+  DEV_CameraComponent =
+      CreateDefaultSubobject<UDEV_CameraComponent>("DEV Camera Component");
+  DEV_CameraComponent->SetupAttachment(DEV_SpringArmComponent);
 
   SphereOverlapComponent =
       CreateDefaultSubobject<USphereComponent>("SphereOverlap");
@@ -184,10 +180,11 @@ void AMainCharacter::ChangeCameraDistance(const FInputActionValue& Value) {
   To >= MaxCameraDistanceToCharacter || To <= MinCameraDistanceToCharacter
       ? false
       : DEV_SpringArmComponent->InterpolateTargetArmLength(From, To);
-  // CameraComponent->ChangeCameraDistance(1);
+   //this->UDEVCameraComponent->ChangeCameraDistance(1);
   /*if (Controller != nullptr) {
        CCD_Delegate.Broadcast(Value.Get<float>());
    }*/
+  CCD_Delegate.Broadcast(Value.Get<float>());
 }
 
 // Called every frame

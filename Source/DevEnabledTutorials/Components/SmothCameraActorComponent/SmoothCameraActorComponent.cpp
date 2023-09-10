@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "../../Characters/MainCharacter/MainCharacter.h"
+#include "DevEnabledTutorials\Components\DEV_SpringArmComponent\DEV_SpringArmComponent.h"
 
 // Sets default values for this component's properties
 USmoothCameraActorComponent::USmoothCameraActorComponent() : play_counter(0) {
@@ -34,8 +35,8 @@ void USmoothCameraActorComponent::BeginPlay() {
       TSet<UActorComponent*> FoundComponennts =
           Owner->GetComponents();
       for (UActorComponent* current_component : FoundComponennts) {
-        USpringArmComponent* finded_component =
-            Cast<USpringArmComponent>(current_component);
+        UDEV_SpringArmComponent* finded_component =
+            Cast<UDEV_SpringArmComponent>(current_component);
         if (finded_component) {
           SpringArm = finded_component;
         }
@@ -126,6 +127,8 @@ void USmoothCameraActorComponent::ChangeCameraDistanceSmoothlyBegin() {
       CurveValue = -CurveValue;
     }
     SpringArm->TargetArmLength += CurveValue;
+    GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Red,
+        FString::SanitizeFloat(SpringArm->TargetArmLength));
   }
 }
 

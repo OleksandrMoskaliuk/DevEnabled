@@ -16,6 +16,8 @@ class DEVENABLEDTUTORIALS_API UDEV_CameraComponent : public UCameraComponent
 	GENERATED_BODY()
  public:
  void BeginPlay() override;
+  virtual void TickComponent(float DeltaTime, ELevelTick TickType,
+                             FActorComponentTickFunction* ThisTickFunction) override;
  void ChangeCameraDistance(float Direction);
  private:
  class USpringArmComponent* SpringArm;

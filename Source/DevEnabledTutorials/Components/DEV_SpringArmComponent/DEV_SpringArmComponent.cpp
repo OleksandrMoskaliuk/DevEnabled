@@ -50,15 +50,21 @@ void UDEV_SpringArmComponent::InterpolateTargetArmLengthHandler() {
     LerpTargetArmLengthTimerAlpha = 0.f;
     TimerManager ? TimerManager->ClearTimer(InterpolateTargetArmLengthTimer)
                  : true;
-    PrimaryComponentTick.bCanEverTick = false;
+    //SetComponentTickEnabled(false);
   } else {
     // If set to false TargetArmLength can't be changed in runtime
-    PrimaryComponentTick.bCanEverTick = true;
-    TargetArmLength =
+    //SetComponentTickEnabled(true);
+    this->TargetArmLength =
         FMath::Lerp(TargetArmLengthStartDistance, NewTargetArmLengthDistance,
                     LerpTargetArmLengthTimerAlpha);
     LerpTargetArmLengthTimerAlpha += 0.1;
+    //PrimaryComponentTick.SetTickFunctionEnable(true);
   }
-  GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Red,
-                                   FString::SanitizeFloat(TargetArmLength));
+}
+
+void UDEV_SpringArmComponent::TickComponent(
+    float DeltaTime, ELevelTick TickType,
+    FActorComponentTickFunction* ThisTickFunction) 
+{
+  Super::TickComponent(DeltaTime,TickType,ThisTickFunction); 
 }

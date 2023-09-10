@@ -19,6 +19,8 @@ class DEVENABLEDTUTORIALS_API UDEV_SpringArmComponent
   void InterpolateTargetArmLength(float From, float To);
   UFUNCTION()
   void InterpolateTargetArmLengthHandler();
+  void TickComponent(float DeltaTime, enum ELevelTick TickType,
+                     FActorComponentTickFunction* ThisTickFunction) override;
  private:
   float TargetArmLengthStartDistance;
   float NewTargetArmLengthDistance;

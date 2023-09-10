@@ -19,10 +19,15 @@ void UDEV_CameraComponent::BeginPlay() {
           Cast<USpringArmComponent>(current_component);
       IsValid(finded_component) ? SpringArm = finded_component
                                 : SpringArm = nullptr;
-      GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::White,
-                                       "UDEV_CameraComponent BeginPlay");
+      
     }
   }
+}
+
+void UDEV_CameraComponent::TickComponent(
+    float DeltaTime, ELevelTick TickType,
+    FActorComponentTickFunction* ThisTickFunction) {
+  Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
 // USpringArmComponent* SpringArmTemp = Cast<USpringArmComponent>(Owner);
