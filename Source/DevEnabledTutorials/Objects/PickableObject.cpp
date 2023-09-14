@@ -6,7 +6,6 @@
 APickableObject::APickableObject() {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
-
 }
 
 // Called when the game starts or when spawned
@@ -22,6 +21,8 @@ void APickableObject::Tick(float DeltaTime) {
 }
 
 void APickableObject::OnInteract_Implementation() {}
+
+void APickableObject::OnImpulse_Implementation(FVector Impulse) {}
 
 void APickableObject::StartFocus_Implementation() {}
 

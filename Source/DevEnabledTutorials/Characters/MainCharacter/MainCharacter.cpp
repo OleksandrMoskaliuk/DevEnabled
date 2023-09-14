@@ -12,9 +12,9 @@
 
 #include "../../Components/DEV_CameraComponent/DEV_CameraComponent.h"
 #include "../../Components/DEV_SpringArmComponent/DEV_SpringArmComponent.h"
+#include "DevEnabledTutorials\Components\DEV_CameraComponent\DEV_CameraComponent.h"
 #include "EnhancedInput/Public/EnhancedInputComponent.h"
 #include "EnhancedInput/Public/EnhancedInputSubsystems.h"
-#include "DevEnabledTutorials\Components\DEV_CameraComponent\DEV_CameraComponent.h"
 // Other
 #include "../../Interfaces/DEV_Interact.cpp"
 
@@ -151,7 +151,8 @@ void AMainCharacter::OverlapBegin(UPrimitiveComponent* OverlappedComponent,
                                   UPrimitiveComponent* OtherComp,
                                   int32 OtherBodyIndex, bool bFromSweep,
                                   const FHitResult& SweepResult) {
-  GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, "Hello from CPP!");
+  GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
+                                   "Overlap with other actor!");
   if (OtherActor) {
     IDEV_Interact* AInterface = Cast<IDEV_Interact>(OtherActor);
     if (AInterface) {
@@ -166,6 +167,56 @@ void AMainCharacter::PlayerInteract(const FInputActionValue& Value) {
     IDEV_Interact* AInterface = Cast<IDEV_Interact>(IActor);
     if (AInterface) {
       AInterface->Execute_OnInteract(IActor);
+      FVector Start;
+      FRotator Rot;
+      GetController()->GetPlayerViewPoint(Start, Rot);
+      // AInterface->Execute_OnImpulse(IActor,
+      // DEV_CameraComponent->GetForwardVector() * 200);
+      AInterface->Execute_OnImpulse(IActor, Rot.Vector() * 200);
+    }
+  }
+}
+
+void AMainCharacter::SphereImpulse(const FInputActionValue& Value) {
+  FVector Start;
+  FVector End;
+  FRotator Rot;
+  FHitResult OutHit;
+  FCollisionQueryParams CollisionParams;
+  AActor* Actor = nullptr;
+  GetController()->GetPlayerViewPoint(Start, Rot);
+  End = Start + (Rot.Vector() * 4000);
+
+  if (GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility,
+                                           CollisionParams)) {
+    if (OutHit.bBlockingHit) {
+      TArray<FHitResult> HitArray;
+      float SphereRadius = 500;
+      FCollisionShape Sphere = FCollisionShape::MakeSphere(SphereRadius);
+
+      GetWorld()->SweepMultiByChannel(HitArray, OutHit.Location,
+          OutHit.ImpactPoint + FVector(1.f, 1.f, 1.f),
+                                      FQuat::Identity, ECC_WorldStatic, Sphere);
+
+        DrawDebugSphere(GetWorld(), OutHit.Location, SphereRadius, 20,
+                        FColor::Yellow, false, 1.f);
+
+        for (auto SingleHit : HitArray) {
+          if (UStaticMeshComponent* HitMesh = Cast<UStaticMeshComponent>(
+                  SingleHit.GetActor()->GetRootComponent())) {
+
+            HitMesh->AddRadialImpulse(OutHit.ImpactPoint, SphereRadius,
+                                      500,
+                                      ERadialImpulseFalloff::RIF_Constant,
+                                      true);
+
+           /*HitMesh->AddImpulse(OutHit.ImpactPoint.ForwardVector * 2000 );*/
+
+            GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
+                                             "Draw debug sphere done !");
+          }
+        }
+      
     }
   }
 }
@@ -174,13 +225,13 @@ void AMainCharacter::ChangeCameraDistance(const FInputActionValue& Value) {
   float From = DEV_SpringArmComponent->TargetArmLength;
   float To =
       DEV_SpringArmComponent->TargetArmLength + (60 * Value.Get<float>());
-  float MaxCameraDistanceToCharacter = 1000; 
+  float MaxCameraDistanceToCharacter = 1000;
   float MinCameraDistanceToCharacter = 100;
   // Clamp distance to player
   To >= MaxCameraDistanceToCharacter || To <= MinCameraDistanceToCharacter
       ? false
       : DEV_SpringArmComponent->InterpolateTargetArmLength(From, To);
-   //this->UDEVCameraComponent->ChangeCameraDistance(1);
+  // this->UDEVCameraComponent->ChangeCameraDistance(1);
   /*if (Controller != nullptr) {
        CCD_Delegate.Broadcast(Value.Get<float>());
    }*/
@@ -275,5 +326,10 @@ void AMainCharacter::SetupPlayerInputComponent(
                                       "IA_PlayerInteract");*/
     EnhancedInputComponent->BindAction(*InputAction, ETriggerEvent::Triggered,
                                        this, &AMainCharacter::PlayerInteract);
+  }
+
+  if (auto InputAction = InputActionsMap.Find("IA_SprhereImpulse")) {
+    EnhancedInputComponent->BindAction(*InputAction, ETriggerEvent::Triggered,
+                                       this, &AMainCharacter::SphereImpulse);
   }
 }

@@ -67,6 +67,8 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
   // Default Player Interact
   void PlayerInteract(const FInputActionValue& Value);
 
+  void SphereImpulse(const FInputActionValue& Value);
+
  public:
   // Handle camera distance input
   UFUNCTION()
