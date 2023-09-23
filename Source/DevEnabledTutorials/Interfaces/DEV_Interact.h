@@ -24,6 +24,9 @@ class DEVENABLEDTUTORIALS_API IDEV_Interact {
   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interact")
    void OnInteract();
 
+   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interact")
+   void OnInteractWithActor(AActor* Other);
+
   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interact")
    void OnImpulse(FVector Impulse);
 
