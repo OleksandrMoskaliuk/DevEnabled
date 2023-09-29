@@ -191,7 +191,10 @@ void AMainCharacter::SquashTimelineProgress(float value)
   // When player land on ground squash cause gap between ground and mesh.
   FVector NewScale = FMath::Lerp(
       StartMeshScale,
-      FVector(StartMeshScale.X, StartMeshScale.Y, StartMeshScale.Z * SquashStrength), value);
+                                 FVector(StartMeshScale.X + SquashStrength/2,
+                                         StartMeshScale.Y + SquashStrength/2,
+                                         StartMeshScale.Z * SquashStrength),
+                                 value);
   StaticMeshComponent->SetRelativeScale3D(NewScale);
   
   // Fixing gap between mesh and ground
