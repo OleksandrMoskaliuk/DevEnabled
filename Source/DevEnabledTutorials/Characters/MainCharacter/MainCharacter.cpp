@@ -151,12 +151,11 @@ void AMainCharacter::OverlapBegin(UPrimitiveComponent* OverlappedComponent,
                                   UPrimitiveComponent* OtherComp,
                                   int32 OtherBodyIndex, bool bFromSweep,
                                   const FHitResult& SweepResult) {
-  GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
-                                   "Overlap with other actor!");
   if (OtherActor) {
     IDEV_Interact* AInterface = Cast<IDEV_Interact>(OtherActor);
     if (AInterface) {
       AInterface->Execute_OnInteract(OtherActor);
+      AInterface->Execute_OnInteractWithActor(OtherActor, this);
     }
   }
 }
