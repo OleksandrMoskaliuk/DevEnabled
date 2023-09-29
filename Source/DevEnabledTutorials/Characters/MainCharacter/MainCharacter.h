@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Components/TimelineComponent.h"
 #include "CoreMinimal.h"
 #include "EnhancedInput/Public/InputActionValue.h"
 #include "GameFramework/Character.h"
@@ -18,7 +19,7 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
  public:
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
   class UDEV_SpringArmComponent* DEV_SpringArmComponent;
-  
+
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
   class UDEV_CameraComponent* DEV_CameraComponent;
 
@@ -40,9 +41,24 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
   UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Gameplay")
   class USphereComponent* SphereOverlapComponent;
 
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Squash")
+  float SquashStrength;
+
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,
+            meta = (ClampMin = "-100", ClampMax = "100", UIMin = "-100",
+                    UIMax = "100"),
+            Category = "Squash")
+  float SquashGapOffsetOnLanding;
+
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,
+            meta = (ClampMin = "0.1", ClampMax = "1", UIMin = "0.1",
+                    UIMax = "1"),
+            Category = "Squash")
+  class UCurveFloat* SquashCurve;
+
   // Sets default values for this character's properties
   AMainCharacter();
-
+  // ~AMainCharacter();
  protected:
   // Called when the game starts or when spawned
   virtual void BeginPlay() override;
@@ -81,6 +97,7 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
   virtual void SetupPlayerInputComponent(
       class UInputComponent* PlayerInputComponent) override;
 
+  virtual void Landed(const FHitResult& Hit) override;
   /* Change camera distance delegate for ChangeCameraDistance(const
   FInputActionValue& Value) For maling MainCharacter class independent from
   SmoothCameraComponent creation, (now optional) when you add component you have
@@ -98,4 +115,11 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
                     AActor* OtherActor, UPrimitiveComponent* OtherComp,
                     int32 OtherBodyIndex, bool bFromSweep,
                     const FHitResult& SweepResult);
+
+  // Squash mesh  logick
+  FTimeline SquashTimeline;
+  FVector SquashOffsetRelativeMeshLocation;
+  FVector StartMeshScale;
+  UFUNCTION()
+  void SquashTimelineProgress(float value);
 };

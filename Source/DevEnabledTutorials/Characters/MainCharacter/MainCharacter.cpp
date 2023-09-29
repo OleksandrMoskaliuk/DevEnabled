@@ -7,6 +7,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Components/CapsuleComponent.h"
 // Inputs
 #include <GameFramework/PawnMovementComponent.h>
 
@@ -41,15 +42,39 @@ AMainCharacter::AMainCharacter() : FocusedActor(nullptr) {
   InputMappingContext = nullptr;
   BaseTurnRate = 45.f;
   BaseLookUpAtRate = 45.f;
+  SquashGapOffsetOnLanding = 0;
+  SquashStrength = 1;
 }
+
+//AMainCharacter::~AMainCharacter() 
+//{
+// Super::~ACharacter(); 
+// if (SquashTimeline) {
+// delete SquashTimeline;
+// SquashTimeline = nullptr;
+// }
+//}
 
 // Called when the game starts or when spawned
 void AMainCharacter::BeginPlay() {
   Super::BeginPlay();
 
+  if (SquashCurve && StaticMeshComponent) {
+    StartMeshScale = StaticMeshComponent->GetComponentScale();
+    SquashOffsetRelativeMeshLocation =
+        StaticMeshComponent->GetRelativeLocation();
+    FOnTimelineFloat SquashTimelineCallback;
+    SquashTimelineCallback.BindUFunction(this, "SquashTimelineProgress");
+    SquashTimeline.AddInterpFloat(SquashCurve, SquashTimelineCallback);
+    SquashTimeline.SetLooping(false);
+  }
+
   SphereOverlapComponent->OnComponentBeginOverlap.AddDynamic(
       this, &AMainCharacter::OverlapBegin);
 }
+
+
+
 
 void AMainCharacter::MoveForward() {
   GEngine->AddOnScreenDebugMessage(123, 2, FColor::Red, "Move is here");
@@ -103,6 +128,7 @@ void AMainCharacter::Look(const FInputActionValue& Value) {
 }
 
 void AMainCharacter::Jump(const FInputActionValue& Value) {
+  if (!SquashTimeline.IsPlaying())
   if (Controller != nullptr && !GetMovementComponent()->IsFalling()) {
     ACharacter::Jump();
   }
@@ -160,6 +186,39 @@ void AMainCharacter::OverlapBegin(UPrimitiveComponent* OverlappedComponent,
   }
 }
 
+void AMainCharacter::SquashTimelineProgress(float value) 
+{
+  // When player land on ground squash cause gap between ground and mesh.
+  FVector NewScale = FMath::Lerp(
+      StartMeshScale,
+      FVector(StartMeshScale.X, StartMeshScale.Y, StartMeshScale.Z * SquashStrength), value);
+  StaticMeshComponent->SetRelativeScale3D(NewScale);
+  
+  // Fixing gap between mesh and ground
+  FVector NewLocation = FMath::Lerp(
+      SquashOffsetRelativeMeshLocation,
+                  FVector(SquashOffsetRelativeMeshLocation.X,
+                          SquashOffsetRelativeMeshLocation.Y,
+              SquashOffsetRelativeMeshLocation.Z + SquashGapOffsetOnLanding),
+      value);
+  StaticMeshComponent->SetRelativeLocation(NewLocation);
+
+
+
+
+  /* FVector LocationOffset = FVector(SquashStartLocation.X,
+     SquashStartLocation.Y, SquashStartLocation.Z * NewScale.Z);
+
+ FVector LocOffset = FVector(LocMesh.X, LocMesh.Y, LocMesh.Z);
+ FVector LocMesh = StaticMeshComponent->GetRelativeLocation();
+
+  FString locX = FString::SanitizeFloat(LocMesh.X);
+  FString locY = FString::SanitizeFloat(LocMesh.X);
+  FString locZ = FString::SanitizeFloat(LocMesh.X);
+  GEngine->AddOnScreenDebugMessage(381, 0.1f, FColor::Green,
+                                   FString("X=" + locX + "Y=" + locY + "Z=" + locZ));*/
+}
+
 void AMainCharacter::PlayerInteract(const FInputActionValue& Value) {
   AActor* IActor = FindAcotrByLineTrace();
   if (IActor) {
@@ -210,9 +269,6 @@ void AMainCharacter::SphereImpulse(const FInputActionValue& Value) {
                                       true);
 
            /*HitMesh->AddImpulse(OutHit.ImpactPoint.ForwardVector * 2000 );*/
-
-            GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
-                                             "Draw debug sphere done !");
           }
         }
       
@@ -265,6 +321,8 @@ void AMainCharacter::Tick(float DeltaTime) {
     FocusedActor = FindAcotrByLineTrace();
     focus(FocusedActor, true);
   }
+
+  SquashTimeline.TickTimeline(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -331,4 +389,12 @@ void AMainCharacter::SetupPlayerInputComponent(
     EnhancedInputComponent->BindAction(*InputAction, ETriggerEvent::Triggered,
                                        this, &AMainCharacter::SphereImpulse);
   }
+}
+
+void AMainCharacter::Landed(const FHitResult& Hit) 
+{ 
+ GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, FString("OnLanded!!!"));
+ Super::Landed(Hit);
+ SquashTimeline.PlayFromStart();
+
 }
