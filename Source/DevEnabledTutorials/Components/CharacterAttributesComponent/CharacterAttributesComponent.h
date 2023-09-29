@@ -23,6 +23,7 @@ class DEVENABLEDTUTORIALS_API UCharacterAttributesComponent
   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
   float CurrentHealth;
 
+  /** UDEV_HealthBar Blueprint  **/
   UPROPERTY(EditAnywhere)
   TSubclassOf<class UDEV_HealthBar> PlayerHealthBarHUDclass;
 

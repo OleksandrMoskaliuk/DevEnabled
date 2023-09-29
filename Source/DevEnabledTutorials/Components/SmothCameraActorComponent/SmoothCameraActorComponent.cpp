@@ -84,7 +84,7 @@ void USmoothCameraActorComponent::TickComponent(
 void USmoothCameraActorComponent::ChangeCameraDistance(float DistanceValue) {
 
  GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green,
-                                   "Dinamic binding works!!!!!!!");
+                                   FString::SanitizeFloat(DistanceValue));
 
   // if (SmoothCameraMoveTimeline->IsPlaying()) return;
   if (MoveCurve && SpringArm) {

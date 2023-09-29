@@ -9,7 +9,7 @@
 class USpringArmComponent;
 
 /* This class will make posiible to change camera distance to player more
- * smoother way through curve */
+ smoother way through curve */
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class DEVENABLEDTUTORIALS_API USmoothCameraActorComponent
     : public UActorComponent {
