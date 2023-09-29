@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "../../Characters/MainCharacter/MainCharacter.h"
+#include "DevEnabledTutorials\Components\DEV_SpringArmComponent\DEV_SpringArmComponent.h"
 
 // Sets default values for this component's properties
 USmoothCameraActorComponent::USmoothCameraActorComponent() : play_counter(0) {
@@ -31,11 +32,11 @@ void USmoothCameraActorComponent::BeginPlay() {
     // Get pointer to SpringArmComponent
     AActor* Owner = GetOwner();
     if (Owner) {
-      TArray<UActorComponent*> FoundComponennts =
-          Owner->GetComponentsByClass(USpringArmComponent::StaticClass());
+      TSet<UActorComponent*> FoundComponennts =
+          Owner->GetComponents();
       for (UActorComponent* current_component : FoundComponennts) {
-        USpringArmComponent* finded_component =
-            Cast<USpringArmComponent>(current_component);
+        UDEV_SpringArmComponent* finded_component =
+            Cast<UDEV_SpringArmComponent>(current_component);
         if (finded_component) {
           SpringArm = finded_component;
         }
@@ -65,7 +66,7 @@ void USmoothCameraActorComponent::BeginPlay() {
       MainCharacter->DCD_Delegate.BindUObject(
           this, &USmoothCameraActorComponent::DecreaseCameraDistance);*/
      
-      MainCharacter->CCD_Delegate.AddUObject(
+     MainCharacter->CCD_Delegate.AddUObject(
           this, &USmoothCameraActorComponent::ChangeCameraDistance);
        
     }
@@ -126,6 +127,8 @@ void USmoothCameraActorComponent::ChangeCameraDistanceSmoothlyBegin() {
       CurveValue = -CurveValue;
     }
     SpringArm->TargetArmLength += CurveValue;
+    GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Red,
+        FString::SanitizeFloat(SpringArm->TargetArmLength));
   }
 }
 

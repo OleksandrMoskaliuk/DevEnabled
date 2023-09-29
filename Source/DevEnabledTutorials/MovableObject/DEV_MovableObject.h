@@ -5,30 +5,24 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "..\Interfaces\DEV_Interact.cpp"
-#include "PickableObject.generated.h"
+#include "DEV_MovableObject.generated.h"
 
 UCLASS()
-class DEVENABLEDTUTORIALS_API APickableObject : public AActor,
-                                                public IDEV_Interact {
+class DEVENABLEDTUTORIALS_API ADEV_MovableObject : public AActor,
+                                                   public IDEV_Interact {
   GENERATED_BODY()
 
  public:
   // Sets default values for this actor's properties
-  APickableObject();
-
- protected:
-  // Called when the game starts or when spawned
-  virtual void BeginPlay() override;
-
- public:
-  // Called every frame
-  virtual void Tick(float DeltaTime) override;
+  ADEV_MovableObject();
+  UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Mesh")
+  UStaticMeshComponent *MeshComponent;
 
   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interact")
   void OnInteract();
   void OnInteract_Implementation();
 
-  UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interact")
+   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interact")
   void OnImpulse(FVector Impulse);
   void OnImpulse_Implementation(FVector Impulse);
 
@@ -39,4 +33,12 @@ class DEVENABLEDTUTORIALS_API APickableObject : public AActor,
   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interact")
   void EndFocus();
   void EndFocus_Implementation();
+
+ protected:
+  // Called when the game starts or when spawned
+  virtual void BeginPlay() override;
+
+ public:
+  // Called every frame
+  virtual void Tick(float DeltaTime) override;
 };

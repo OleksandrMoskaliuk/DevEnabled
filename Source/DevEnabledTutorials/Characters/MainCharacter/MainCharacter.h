@@ -17,18 +17,18 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
 
  public:
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
-  class USpringArmComponent* SpringArmComponent;
-
+  class UDEV_SpringArmComponent* DEV_SpringArmComponent;
+  
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
-  class UCameraComponent* CameraComponent;
+  class UDEV_CameraComponent* DEV_CameraComponent;
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mesh")
   class UStaticMeshComponent* StaticMeshComponent;
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
   float BaseTurnRate;
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
+  UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
   float BaseLookUpAtRate;
 
   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
@@ -66,6 +66,8 @@ class DEVENABLEDTUTORIALS_API AMainCharacter : public ACharacter {
 
   // Default Player Interact
   void PlayerInteract(const FInputActionValue& Value);
+
+  void SphereImpulse(const FInputActionValue& Value);
 
  public:
   // Handle camera distance input
